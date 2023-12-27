@@ -1,0 +1,23 @@
+FROM public.ecr.aws/lambda/nodejs:20 as builder
+# go somewhere
+WORKDIR /usr/app
+# install dev dependencies for build
+COPY package*.json ./
+RUN npm install
+# build app (/usr/app/dist/* folder)
+COPY . .
+RUN npm run build
+# install prod dependencies for runtime only
+RUN rm -rf ./node_modules \
+  && npm install --omit=dev
+
+
+FROM public.ecr.aws/lambda/nodejs:20
+# Set the working directory to the Lambda task root directory
+WORKDIR ${LAMBDA_TASK_ROOT}
+# Copy productions dependencies from the build stage
+COPY --from=builder /usr/app/node_modules ./node_modules
+# Copy the compiled JavaScript files from the build stage
+COPY --from=builder /usr/app/dist ./dist
+# Set the command to run your JavaScript handler
+CMD ["dist/hello.handler"]

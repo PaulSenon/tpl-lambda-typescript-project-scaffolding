@@ -1,0 +1,27 @@
+version: '3'
+services:
+  dev-env:
+    build:
+      dockerfile: Dockerfile.devEnv
+    env_file:
+      - .env
+    volumes:
+      - .:/usr/src/app
+
+  lambda-dev:
+    build:
+      dockerfile: Dockerfile.devLambda
+    env_file:
+      - .env
+    volumes:
+      - ./:/var/task
+    ports:
+      - "3000:8080"
+
+  lambda-prod:
+    build:
+      dockerfile: Dockerfile.prodLambda
+    env_file:
+      - .env
+    ports:
+      - "3000:8080"
