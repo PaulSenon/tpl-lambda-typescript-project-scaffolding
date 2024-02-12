@@ -1,16 +1,17 @@
 {
+  "extends": "@tsconfig/node20/tsconfig.json",
+
   "compilerOptions": {
-    "target": "ES2018",
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "outDir": "./dist/src",
-    "strict": true,
-    "esModuleInterop": true,
+    "rootDir": "./src",
+    "outDir": "./dist",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
     "paths": {
       "@/*": ["./src/*"]
     },
     "typeRoots": ["./node_modules/@types"]
+
   },
-  "include": ["src/**/*.ts", "server.ts"],
-  "exclude": ["node_modules", "**/*.test.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }

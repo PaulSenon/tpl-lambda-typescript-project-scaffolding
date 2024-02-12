@@ -3,9 +3,19 @@
 # this is handling typescript compilation and running the lambda function via @swc-node/register and a given bootstrap.js file
 
 FROM public.ecr.aws/lambda/nodejs:20
+
 WORKDIR ${LAMBDA_TASK_ROOT}
+
 COPY . .
-# RUN npm install -g typescript ts-node
-ENV NODE_OPTIONS="-r @swc-node/register"
+ARG TS_COMPILER_DEV
+RUN if [ "$TS_COMPILER_DEV" = "tsc" ] ; then \
+    echo 'NODE_OPTIONS="-r ts-node/register"' >> .env ; \
+    elif [ "$TS_COMPILER_DEV" = "swc" ] ; then \
+    echo 'NODE_OPTIONS="-r @swc-node/register"' >> .env ; \
+    else \
+    echo "Error: TS_COMPILER_DEV must be either 'tsc' or 'swc', \"$TS_COMPILER_DEV\" found" && exit 1 ; \
+    fi
+
 COPY bootstrap.js /var/runtime/bootstrap.js
+
 CMD ["bootstrap.handler"]

@@ -1,9 +1,6 @@
 # AWS Lambda Typescript Dockerized Dev Environment Template
 
-## WIP
-
-This is not usable yet, it's a work in progress.
-Only the project scaffolding is done but it's currently just a hello world lambda.
+Just a simple boilerplate project you can start with if you wan to develop lambda in typescript without the need of serverless framework. It handles swc/tsc, add jest, eslint, prettier, create production ready lambda, and allow seamless development in typescript with on the fly compilation. I use the official lambda docker images.
 
 ## Todo list
 
@@ -11,7 +8,7 @@ Only the project scaffolding is done but it's currently just a hello world lambd
 * [x] makefile
 * [x] eslint
 * [x] prettier
-* [x] setup vitest
+* [x] setup ~~vitest~~ jest + swc (because too much struggle making vitest work with tsc and swc)
 * [x] swc for faster builds
 * [x] add a way to run it locally for dev (official lambda runtime image + swc-node handler)
 * [x] automate production build (official docker image with build steps)
@@ -34,6 +31,8 @@ Only the project scaffolding is done but it's currently just a hello world lambd
   * this is meant to be used instead of installing npm locally so you don't have to handle any compatibility issues (in your personal bash you only run make commands or perhaps docker commands if you know what you are doing)
 * `make quality` - will run the tests, typecheck and linters + fixes
   * you can run those steps individually with withing the dev-container (`make bash`) with `npm run test`, `npm run typecheck`, `npm run lint` and `npm run format`
+* `make test` - will run all tests once
+* `make test-watch` - will run all new tests (based on git diff) and rerun on change.
 * `make clean` - will remove all dependencies and all images and containers
 * `make build` - will build the production image in /dist folder (just to see the output if needed)
 * `make prod` - will run the production image
@@ -51,6 +50,41 @@ Use the local api with curl
 ```bash
 curl "http://localhost:3000/2015-03-31/functions/function/invocations" -d '{}'
 ```
+
+:warning: **Note**: the body must be JSON, even if it's empty
+
+### Project structure
+
+```bash
+.
+├──src  # source code (typescript)
+│   └── index.ts # the lambda entrypoint (handler)
+├── bootstrap.js # (see below for details)
+├── docker-compose.prod.yaml # to run prod container locally (see below for details)
+├── docker-compose.yaml # to run des containers locally (see below for details)
+├── Dockerfile.devEnv # docker image to run dev commands (npm etc) (see below for details)
+├── Dockerfile.devLambda # docker image to execute .src/index.ts (via bootstrap.js) (see below for details)
+├── Dockerfile.prodLambda # docker image to execute the built production app (see below for details)
+└──  Makefile # where all the command you need to run are defined (see "Dev Commands" above)
+```
+
+* `bootstrap.js` - **For dev purpose only**. The file executed by de devLambda container, it's the entrypoint of the container. This allow it to transpile the typescript code on the fly so you don't need to build or refresh anything when you dev while `make dev` is running.
+* `docker-compose.prod.yaml` - **For dev purpose only**. The file used when `make prod`, to run the prodLambda container, so you can test the production build locally.
+* `docker-compose.yaml` - **For dev purpose only**. The file used when `make dev`, to run the devLambda container so you have a fast interactive dev environment.
+* `Dockerfile.devEnv` - **For dev purpose only**. The image used to contain all your dev tools for dev such as npm. If you need to run anything you can use `make bash` to open a bash shell in this dev container. (to install new dependencies for example)
+* `Dockerfile.devLambda` - **For dev purpose only**. The image used to run the lambda locally with typescript transpiling on the fly via `bootstrap.js`. It's based on the official lambda runtime image.
+* `Dockerfile.prodLambda` - The image used to run the production build of the lambda. I is either meant to be used locally while debugging final production build with `make prod`, but also can be used to deploy the production image to AWS. It's based on the official lambda runtime image.
+
+### Random things to know
+
+#### Environment variables (.env)
+
+* `TS_COMPILER`: (`swc | tsc`) - to select the compiler to use for production build (used when `npm run build` (or via `make prod`) to automatically switch to `build:swc` or `build:tsc`)
+  * It's recommended to use `tsc` here to have typechecking.
+* `TS_COMPILER_DEV`: (`swc | tsc`) - to select the compiler to use for development (used via `make dev`)
+  * Using swc will significantly speed up development but will disable typechecking
+* `TS_COMPILER_TEST`: (`swc | tsc`) - to select the compiler to use when runing tests (used via `make test` or `make test-watch`)
+  * Using swc will significantly speed up test start time but will disable tests typechecking
 
 ## Production
 

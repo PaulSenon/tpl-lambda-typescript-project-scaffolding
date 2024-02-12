@@ -1,6 +1,10 @@
 FROM node:20
 
+# Install GIT (for jest watch)
+RUN apt-get update && apt-get install -y git
+# Add exception for Git directory (for jest watch)
+RUN git config --global --add safe.directory /usr/src/app
+
 # Install zip utility
 # RUN apt-get update && apt-get install -y zip
 WORKDIR /usr/src/app
-COPY . .

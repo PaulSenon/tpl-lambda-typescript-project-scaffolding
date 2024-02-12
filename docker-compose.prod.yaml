@@ -1,0 +1,10 @@
+services:
+  lambda-prod:
+    build:
+      dockerfile: Dockerfile.prodLambda
+      args:
+        - TS_COMPILER=${TS_COMPILER}
+    env_file:
+      - .env
+    ports:
+      - "3000:8080"
